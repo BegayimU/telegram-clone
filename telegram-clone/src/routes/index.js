@@ -1,3 +1,2 @@
-// basic routes placeholder
-export const routes = [];
-export default routes;
+export { default as AppRouter } from './AppRouter.jsx';
+export { default as ProtectedRoute } from './ProtectedRoute.jsx';
