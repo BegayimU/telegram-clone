@@ -1,2 +1,3 @@
-// firebase placeholders - do not add real Firebase logic here
-export {};
+export { default as app } from './firebaseConfig';
+export { auth } from './auth';
+export { db } from './firestore';
