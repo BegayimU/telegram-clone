@@ -1,7 +1,21 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { auth } from '../../firebase/auth';
 
 export default function MainLayout({ children }) {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const chatsCount = 3;
+
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUser(currentUser);
+    } else {
+      setUser(null);
+    }
+  }, []);
+
   const chats = [
     {
       id: '1',
@@ -31,16 +45,24 @@ export default function MainLayout({ children }) {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <div className="h-14 w-14 rounded-full bg-[#CDB4FF] grid place-items-center text-xl font-bold text-white shadow-[0_12px_30px_rgba(205,180,255,0.25)]">
-                  U
+                  {user ? user.displayName?.charAt(0).toUpperCase() : 'G'}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm text-[#8E8E93]">Welcome back</p>
-                  <p className="text-lg font-semibold text-[#2D2D2D]">Your Profile</p>
+                  <p className="text-lg font-semibold text-[#2D2D2D] truncate">
+                    {user ? user.displayName || 'User' : 'Guest'}
+                  </p>
+                  {user && (
+                    <p className="text-xs text-[#8E8E93] truncate">
+                      {user.email}
+                    </p>
+                  )}
                 </div>
               </div>
               <button
+                onClick={() => navigate('/settings')}
                 type="button"
-                className="rounded-2xl border border-[#E9D7FF] bg-white px-4 py-2 text-sm font-semibold text-[#2D2D2D] shadow-sm transition hover:bg-[#FFC8DD]/80"
+                className="rounded-2xl border border-[#E9D7FF] bg-white px-4 py-2 text-sm font-semibold text-[#2D2D2D] shadow-sm transition hover:bg-[#FFC8DD]/80 flex-shrink-0"
               >
                 Settings
               </button>
@@ -54,16 +76,23 @@ export default function MainLayout({ children }) {
               />
             </div>
 
+            <div className="flex items-center gap-2 mb-4">
+              <h3 className="text-sm font-semibold text-[#2D2D2D]">Chats</h3>
+              <span className="inline-flex items-center justify-center h-5 px-2 rounded-full bg-[#CDB4FF] text-xs font-semibold text-white">
+                {chatsCount}
+              </span>
+            </div>
+
             <div className="space-y-4">
               {chats.map((chat) => (
                 <NavLink
                   key={chat.id}
                   to={`/chat/${chat.id}`}
                   className={({ isActive }) =>
-                    `group flex items-center gap-4 rounded-3xl px-4 py-4 transition-all duration-300 ${
+                    `group flex items-center gap-4 rounded-3xl px-4 py-4 transition-all duration-300 cursor-pointer ${
                       isActive
-                        ? 'bg-[#CDB4FF]/20 ring-1 ring-[#CDB4FF]/60'
-                        : 'bg-white hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(205,180,255,0.15)]'
+                        ? 'bg-[#CDB4FF]/20 ring-1 ring-[#CDB4FF]/60 scale-[1.02] shadow-[0_12px_30px_rgba(205,180,255,0.2)]'
+                        : 'bg-white hover:bg-[#F7E8FF] hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(205,180,255,0.15)]'
                     }`
                   }
                 >

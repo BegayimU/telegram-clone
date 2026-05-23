@@ -1,7 +1,34 @@
-import React from 'react';
-import { ChevronRight, Bell, Lock, Eye, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from '../../firebase/auth';
+import { ChevronRight, Bell, Lock, Eye, LogOut, User } from 'lucide-react';
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUser(currentUser);
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await signOut(auth);
+      navigate('/login');
+    } catch (err) {
+      setError(err.message || 'Logout failed. Please try again.');
+      setLoading(false);
+    }
+  };
+
   const settings = [
     {
       id: 1,
@@ -25,6 +52,25 @@ export default function SettingsPage() {
 
   return (
     <div className="flex h-full flex-col bg-[#FFF7FB] p-6">
+      {/* Profile Section */}
+      {user && (
+        <div className="mb-8 rounded-[24px] bg-white border border-[#F1E4FF] p-6 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-[#F7E8FF] flex items-center justify-center flex-shrink-0">
+              <User size={32} className="text-[#CDB4FF]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-semibold text-[#2D2D2D] truncate">
+                {user.displayName || 'User'}
+              </h2>
+              <p className="text-sm text-[#8E8E93] truncate">
+                {user.email}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-[#2D2D2D]">Settings</h1>
         <p className="mt-2 text-sm text-[#8E8E93]">Manage your account preferences</p>
@@ -56,16 +102,26 @@ export default function SettingsPage() {
         })}
       </div>
 
+      {error && (
+        <div className="rounded-[16px] bg-[#FFEAEA] border border-[#FFCCCC] p-3 mb-4">
+          <p className="text-sm text-[#FF6B6B]">{error}</p>
+        </div>
+      )}
+
       <button
+        onClick={handleLogout}
+        disabled={loading}
         type="button"
-        className="w-full rounded-[24px] bg-white border border-[#FFE9E9] p-4 shadow-sm transition hover:shadow-[0_12px_30px_rgba(255,107,107,0.15)] hover:border-[#FFCCCC] text-left mt-auto"
+        className="w-full rounded-[24px] bg-white border border-[#FFE9E9] p-4 shadow-sm transition hover:shadow-[0_12px_30px_rgba(255,107,107,0.15)] hover:border-[#FFCCCC] text-left mt-auto disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <div className="flex items-center gap-4">
           <div className="rounded-2xl bg-[#FFEAEA] p-3 text-[#FF6B6B]">
             <LogOut size={20} />
           </div>
           <div>
-            <p className="font-semibold text-[#FF6B6B]">Logout</p>
+            <p className="font-semibold text-[#FF6B6B]">
+              {loading ? 'Signing out...' : 'Logout'}
+            </p>
             <p className="text-xs text-[#8E8E93]">Sign out from your account</p>
           </div>
         </div>
