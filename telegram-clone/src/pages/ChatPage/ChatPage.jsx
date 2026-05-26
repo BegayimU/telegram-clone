@@ -2,6 +2,12 @@ import { getUsers } from '../../services/userService';
 import { useState, useEffect, useRef } from 'react';
 import MainLayout from '../../layouts/MainLayout';
 import { useParams } from 'react-router-dom';
+import { auth } from '../../firebase/auth';
+import {
+  sendMessage,
+  subscribeMessages,
+  deleteMessage
+} from '../../services/messageService';
 import {
   Phone,
   MoreHorizontal,
@@ -37,25 +43,42 @@ function ChatPage() {
   const { chatId } = useParams();
   
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState({
+  '1': initialMessages,
+  });
+  const currentMessages = messages[chatId] || [];
   const messagesEndRef = useRef(null);
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-
   const loadUsers = async () => {
-
     const data = await getUsers();
-
     setUsers(data);
-
-    console.log(data);
-
   };
 
   loadUsers();
-
 }, []);
+
+  useEffect(() => {
+
+  if (!chatId) return;
+
+  const unsubscribe =
+    subscribeMessages(
+      chatId,
+      (data) => {
+
+        setMessages((prev) => ({
+          ...prev,
+          [chatId]: data,
+        }));
+
+      }
+    );
+
+  return () => unsubscribe();
+
+}, [chatId]);
 
 useEffect(() => {
   messagesEndRef.current?.scrollIntoView({
@@ -63,9 +86,9 @@ useEffect(() => {
   });
 }, [messages]);
 
-const chat = users.find((user) => user.id === users.find(u => u.id)?.id);
-console.log("FIRST USER:", users[0]);
-console.log("chatId:", chatId);
+const chat = users.find(
+  (user) => user.id === chatId
+);
 
 if (!users?.length) {
   return (
@@ -77,20 +100,19 @@ if (!users?.length) {
   );
 }
 
-  const handleSend = () => {
+  const handleSend = async () => {
   if (!message.trim()) return;
 
-  const newMessage = {
-    id: Date.now(),
-    sender: 'Me',
-    type: 'outgoing',
-    text: message,
-  };
-
-  setMessages((prev) => [...prev, newMessage]);
+  await sendMessage(
+    chatId,
+    auth.currentUser.uid,
+    message
+  );
 
   setMessage('');
 };
+
+  
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -121,10 +143,18 @@ if (!users?.length) {
 
               </p>
 
-              <p className="text-sm text-[#24C48A]">
-
-                {chat ? chat.status : ''}
-
+              <p
+                className={`text-sm ${
+                chat?.status === 'online'
+                ? 'text-[#24C48A]'
+                : 'text-[#8E8E93]'
+              }`}
+              >
+                {chat?.status === 'online'
+                ? 'online'
+                : chat?.lastSeen
+                ? `last seen`
+                : 'offline'}
               </p>
 
             </div>
@@ -176,46 +206,53 @@ if (!users?.length) {
 
                 <div className="space-y-4">
 
-                  {messages.map((msg) => (
+                  {currentMessages.map((msg) => {
+                    const isMyMessage = msg.senderId === auth.currentUser?.uid;
 
+                  return (
                     <div
                       key={msg.id}
-                      className={`flex ${
-                        msg.type === 'outgoing'
-                          ? 'justify-end'
-                          : 'justify-start'
-                      }`}
+                      className={`group flex ${
+                      isMyMessage
+                      ? 'justify-end'
+                      : 'justify-start'
+                   }`}
                     >
+                    <div
+                      className={`max-w-[70%] rounded-[28px] p-4 shadow-sm ${
+                      isMyMessage
+                      ? 'bg-[#CDB4FF]/30 text-[#2D2D2D]'
+                      : 'bg-[#FFF7FB] border border-[#E9D7FF] text-[#2D2D2D]'
+                    }`}
+                    >
+                      <p className="text-xs font-semibold text-[#8E8E93] mb-2">
+                        {isMyMessage ? 'Me' : chat?.name}
+                      </p>
 
-                      <div
-                        className={`max-w-[70%]
-                        rounded-[28px]
-                        p-4
-                        shadow-sm
-                        ${
-                          msg.type === 'outgoing'
-                            ? 'bg-[#CDB4FF]/30 text-[#2D2D2D]'
-                            : 'bg-[#FFF7FB] border border-[#E9D7FF] text-[#2D2D2D]'
-                        }`}
+                      <p className="text-base leading-7">
+                      {msg.text}
+                      </p>
+
+                      {isMyMessage && (
+                      <button
+                        onClick={() => deleteMessage(msg.id)}
+                        className="
+                        mt-2
+                        text-xs
+                        opacity-0
+                        group-hover:opacity-100
+                        transition
+                        text-red-400
+                        hover:text-red-600
+                        "
                       >
-
-                        <p className="text-xs font-semibold text-[#8E8E93] mb-2">
-
-                          {msg.sender}
-
-                        </p>
-
-                        <p className="text-base leading-7">
-
-                          {msg.text}
-
-                        </p>
-
-                      </div>
-
+                        🗑 Delete
+                      </button>
+                    )}
                     </div>
-
-                  ))}
+                  </div>
+                );
+             })}
 
                   <div ref={messagesEndRef}></div>                  
 

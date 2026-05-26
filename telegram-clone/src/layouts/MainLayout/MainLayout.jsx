@@ -1,41 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase/auth';
+import { getUsers } from '../../services/userService';
+import { updateUserStatus }
+from '../../services/userService';
 
 export default function MainLayout({ children }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const chatsCount = 3;
+  const [chats, setChats] = useState([]);
+  
+  const [search, setSearch] = useState('');
+
+  const chatsCount = chats.length;  
+
+  const filteredChats = chats.filter(
+  (chat) =>
+    chat.name
+      .toLowerCase()
+      .includes(
+        search.toLowerCase()
+      )
+  );  
+  useEffect(() => {
+
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) return;
+
+  setUser(currentUser);
+
+  updateUserStatus(
+    currentUser.uid,
+    'online'
+  );
+
+  const handleOffline = () => {
+    updateUserStatus(
+      currentUser.uid,
+      'offline'
+    );
+  };
+
+  window.addEventListener(
+    'beforeunload',
+    handleOffline
+  );
+
+  return () => {
+    handleOffline();
+
+    window.removeEventListener(
+      'beforeunload',
+      handleOffline
+    );
+  };
+
+}, []);
 
   useEffect(() => {
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      setUser(currentUser);
-    } else {
-      setUser(null);
-    }
-  }, []);
+  const loadChats = async () => {
+    const data = await getUsers();
+    setChats(data);
+  };
 
-  const chats = [
-    {
-      id: '1',
-      name: 'Anna',
-      message: 'See you at 6 PM',
-      status: 'online',
-    },
-    {
-      id: '2',
-      name: 'Alex',
-      message: 'Typing a reply...',
-      status: 'typing...',
-    },
-    {
-      id: '3',
-      name: 'Sara',
-      message: 'Last seen 4m ago',
-      status: 'last seen',
-    },
-  ];
+  loadChats();
+}, []);
+
+
 
   return (
     <div className="h-screen bg-[#FFF7FB] text-[#2D2D2D]">
@@ -72,6 +104,8 @@ export default function MainLayout({ children }) {
               <input
                 type="text"
                 placeholder="Search chats"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 className="w-full rounded-3xl border border-[#E9D7FF] bg-[#FFF7FB] px-5 py-3 text-sm text-[#2D2D2D] outline-none transition focus:border-[#CDB4FF] focus:ring-2 focus:ring-[#EFD9FF]"
               />
             </div>
@@ -84,10 +118,10 @@ export default function MainLayout({ children }) {
             </div>
 
             <div className="space-y-4">
-              {chats.map((chat) => (
+              {filteredChats.map((chat) => (
                 <NavLink
                   key={chat.id}
-                  to={`/chat/${chat.id}`}
+                  to={`/chat/${chat.uid}`}
                   className={({ isActive }) =>
                     `group flex items-center gap-4 rounded-3xl px-4 py-4 transition-all duration-300 cursor-pointer ${
                       isActive
@@ -97,7 +131,7 @@ export default function MainLayout({ children }) {
                   }
                 >
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#FFC8DD] text-lg font-semibold text-[#2D2D2D] shadow-[0_12px_30px_rgba(255,200,221,0.25)]">
-                    {chat.name.charAt(0)}
+                    {chat.displayName?.charAt(0) || 'U'}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between gap-4">

@@ -1,5 +1,10 @@
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/firestore';
+import {
+  doc,
+  updateDoc,
+  serverTimestamp
+} from 'firebase/firestore';
 
 export const getUsers = async () => {
   try {
@@ -21,5 +26,32 @@ export const getUsers = async () => {
     );
 
     return [];
+  }
+};
+
+export const updateUserStatus = async (
+  uid,
+  status
+) => {
+  try {
+    const userRef = doc(
+      db,
+      'users',
+      uid
+    );
+
+    await updateDoc(
+      userRef,
+      {
+        status,
+        lastSeen:
+          status === 'offline'
+            ? serverTimestamp()
+            : null
+      }
+    );
+
+  } catch(error){
+    console.log(error);
   }
 };
