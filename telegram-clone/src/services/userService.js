@@ -55,3 +55,28 @@ export const updateUserStatus = async (
     console.log(error);
   }
 };
+
+export const updateProfile = async (
+  uid,
+  data
+) => {
+  try {
+
+    const userRef = doc(
+      db,
+      'users',
+      uid
+    );
+
+    await updateDoc(
+      userRef,
+      data
+    );
+
+    return true;
+
+  } catch(error) {
+    console.log(error);
+    return false;
+  }
+};

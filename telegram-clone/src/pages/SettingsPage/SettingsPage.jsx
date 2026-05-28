@@ -3,19 +3,57 @@ import { useNavigate } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase/auth';
 import { ChevronRight, Bell, Lock, Eye, LogOut, User } from 'lucide-react';
+import {
+  updateUserStatus,
+  getUsers,
+  updateProfile
+} from '../../services/userService';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [name, setName] = useState('');
+  const [avatar, setAvatar] = useState('');
 
-  useEffect(() => {
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      setUser(currentUser);
+useEffect(() => {
+
+  const loadUser = async () => {
+
+    const currentUser =
+      auth.currentUser;
+
+    if (!currentUser) return;
+
+    const users =
+      await getUsers();
+
+    const dbUser =
+      users.find(
+        (u) =>
+          u.id === currentUser.uid
+      );
+
+    if (dbUser) {
+
+      setUser(dbUser);
+
+      setName(
+        dbUser.name || ''
+      );
+
+      setAvatar(
+        dbUser.avatar || ''
+      );
+
     }
-  }, []);
+
+  };
+
+  loadUser();
+
+}, []);
 
   const handleLogout = async () => {
     setError('');
@@ -50,6 +88,43 @@ export default function SettingsPage() {
     },
   ];
 
+const handleSave = async () => {
+
+  console.log('UID:', auth.currentUser.uid);
+
+  console.log({
+    name,
+    avatar
+  });
+
+const success =
+  await updateProfile(
+    auth.currentUser.uid,
+    {
+      name,
+      avatar
+    }
+  );
+
+console.log(
+  'saved:',
+  success
+);
+
+if (success) {
+
+  setUser({
+    ...user,
+    name,
+    avatar
+  });
+
+  alert('Profile updated');
+
+}
+
+};
+
   return (
     <div className="flex h-full flex-col bg-[#FFF7FB] p-6">
       {/* Profile Section */}
@@ -70,6 +145,48 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      <div className="mb-6 rounded-[24px] bg-white p-6 border border-[#F1E4FF]">
+
+  <input
+    value={name}
+    onChange={(e)=>
+      setName(e.target.value)
+    }
+    placeholder="Name"
+    className="w-full border p-3 rounded-xl mb-3"
+  />
+
+  <input
+    value={avatar}
+    onChange={(e)=>
+      setAvatar(e.target.value)
+    }
+    placeholder="Avatar URL"
+    className="w-full border p-3 rounded-xl mb-3"
+  />
+
+  <button
+    onClick={handleSave}
+    className="
+    rounded-2xl
+    bg-[#CDB4FF]
+    px-5
+    py-3
+    text-white
+    font-medium
+    transition-all
+    duration-300
+    hover:bg-[#b89dff]
+    hover:scale-105
+    hover:shadow-[0_10px_25px_rgba(205,180,255,0.4)]
+    active:scale-95
+    "
+  >
+    Save
+  </button>
+
+</div>
 
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-[#2D2D2D]">Settings</h1>

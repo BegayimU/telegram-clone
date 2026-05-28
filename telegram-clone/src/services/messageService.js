@@ -18,7 +18,8 @@ import {
 export const sendMessage = async (
   chatId,
   senderId,
-  text
+  text,
+  image = ''
 ) => {
   try {
     await addDoc(
@@ -27,6 +28,7 @@ export const sendMessage = async (
         chatId,
         senderId,
         text,
+        image,
         createdAt: serverTimestamp(),
       }
     );
