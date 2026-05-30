@@ -186,50 +186,76 @@ function ChatPage() {
                     return (
                       <div
                         key={msg.id}
-                        className={`group flex ${
+                        className={`group relative overflow-visible flex ${
                           isMyMessage ? "justify-end" : "justify-start"
                         }`}
                       >
                         <div
-                          className={`max-w-[70%] rounded-[28px] p-4 shadow-sm ${
+                          className={`relative max-w-[80%] rounded-[28px] p-4 shadow-sm ${
                             isMyMessage
                               ? "bg-[#CDB4FF]/30 text-[#2D2D2D]"
                               : "bg-[#FFF7FB] border border-[#E9D7FF] text-[#2D2D2D]"
                           }`}
                         >
-                          <p className="text-xs font-semibold text-[#8E8E93] mb-2">
-                            {isMyMessage ? "Me" : chat?.name}
-                          </p>
-
-                          <p className="text-base leading-7">{msg.text}</p>
-                          {msg.image && (
-                            <img
-                              src={msg.image}
-                              alt="message"
-                              className="
-                              max-w-[260px]
-                              rounded-2xl
-                              object-cover
-                              "
-                            />
-                          )}
-
                           {isMyMessage && (
                             <button
                               onClick={() => deleteMessage(msg.id)}
                               className="
-                              mt-2
-                              text-xs
+                              absolute
+                              top-2
+                              right-3
                               opacity-0
                               group-hover:opacity-100
                               transition
-                              text-red-400
-                              hover:text-red-600
+                              text-red-500
                               "
                             >
-                              🗑 Delete
+                              🗑
                             </button>
                           )}
+                          <p className="text-xs font-semibold text-[#8E8E93] mb-2">
+                            {isMyMessage ? "Me" : chat?.name}
+                          </p>
+
+                          <div className="relative pr-12">
+                            {msg.text && (
+                              <p className="text-base leading-6 break-words">
+                                {msg.text}
+                              </p>
+                            )}
+
+                            {msg.image && (
+                              <img
+                                src={msg.image}
+                                alt="message"
+                                className="
+                                mt-2
+                                max-w-[260px]
+                                rounded-2xl
+                                object-cover
+                                "
+                              />
+                            )}
+
+                            <span
+                              className="
+                              absolute
+                              bottom-0
+                              right-0
+                              text-[11px]
+                              text-[#8E8E93]
+                              "
+                            >
+                              {msg.createdAt
+                                ? new Date(
+                                    msg.createdAt.seconds * 1000,
+                                  ).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : ""}
+                            </span>
+                          </div>                          
                         </div>
                       </div>
                     );
@@ -315,18 +341,18 @@ function ChatPage() {
                     <button
                       onClick={() => setShowImageInput(!showImageInput)}
                       className="
-    inline-flex
-    h-11
-    w-11
-    items-center
-    justify-center
-    rounded-2xl
-    bg-white
-    text-[#2D2D2D]
-    shadow-sm
-    transition
-    hover:bg-[#F7E8FF]
-    "
+                      inline-flex
+                      h-11
+                      w-11
+                      items-center
+                      justify-center
+                      rounded-2xl
+                      bg-white
+                      text-[#2D2D2D]
+                      shadow-sm
+                      transition
+                      hover:bg-[#F7E8FF]
+                      "
                     >
                       📎
                     </button>
@@ -334,18 +360,18 @@ function ChatPage() {
                     {showImageInput && (
                       <div
                         className="
-      absolute
-      bottom-14
-      right-0
-      w-[260px]
-      rounded-2xl
-      border
-      border-[#E9D7FF]
-      bg-white
-      p-4
-      shadow-[0_15px_40px_rgba(205,180,255,0.2)]
-      z-50
-      "
+                        absolute
+                        bottom-14
+                        right-0
+                        w-[260px]
+                        rounded-2xl
+                        border
+                        border-[#E9D7FF]
+                        bg-white
+                        p-4
+                        shadow-[0_15px_40px_rgba(205,180,255,0.2)]
+                        z-50
+                        "
                       >
                         <input
                           type="text"
@@ -353,16 +379,16 @@ function ChatPage() {
                           value={imageUrl}
                           onChange={(e) => setImageUrl(e.target.value)}
                           className="
-        w-full
-        rounded-xl
-        border
-        border-[#E9D7FF]
-        px-4
-        py-3
-        text-sm
-        outline-none
-        focus:border-[#CDB4FF]
-        "
+                          w-full
+                          rounded-xl
+                          border
+                          border-[#E9D7FF]
+                          px-4
+                          py-3
+                          text-sm
+                          outline-none
+                          focus:border-[#CDB4FF]
+                          "
                         />
 
                         <button
@@ -376,17 +402,17 @@ function ChatPage() {
                             setShowImageInput(false);
                           }}
                           className="
-        mt-3
-        w-full
-        rounded-xl
-        bg-[#CDB4FF]
-        py-3
-        text-sm
-        font-medium
-        text-white
-        transition
-        hover:bg-[#b89dff]
-        "
+                          mt-3
+                          w-full
+                          rounded-xl
+                          bg-[#CDB4FF]
+                          py-3
+                          text-sm
+                          font-medium
+                          text-white
+                          transition
+                          hover:bg-[#b89dff]
+                          "
                         >
                           Send image
                         </button>
